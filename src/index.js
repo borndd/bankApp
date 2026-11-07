@@ -1,13 +1,32 @@
+import express from "express";
 import { Account } from "./models/Account.js";
 
-try{
-const account = new Account("Dior");
+const app = express();
+const port = 3000;
+const accounts = [];
+app.use(express.json());
 
-account.deposit(10);
-account.withdraw(2);
-console.log(account.balance);
-console.log(account.transactions);
+app.post("/accounts", (req,res)=> {
+    try{
+        const {ownerName} = req.body;
+        const account = new Account(ownerName);
+        accounts.push(account);
+        res.status(201).json({
+            id:account.id,
+            ownerName:account.ownerName,
+            balance: account.balance,
+            createdAt: account.createdAt
+        })
+    }catch(error){
+        res.status(400).json({
+            error: error.message
+        })
+    }
+})
+app.get("/health", (req, res) => {
+  res.json({ status: "ok" });
+});
 
-}catch(error){
-    console.log(error.message);
-}
+app.listen(port, () => {
+  console.log(`Server is running on port: ${port}`);
+});
