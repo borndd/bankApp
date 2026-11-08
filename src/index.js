@@ -1,32 +1,48 @@
-import express from "express";
+import express, { response } from "express";
 import { Account } from "./models/Account.js";
 
-const app = express();
+const server = express();
 const port = 3000;
-const accounts = [];
-app.use(express.json());
+const allAccounts = [];
 
-app.post("/accounts", (req,res)=> {
-    try{
-        const {ownerName} = req.body;
-        const account = new Account(ownerName);
-        accounts.push(account);
-        res.status(201).json({
-            id:account.id,
-            ownerName:account.ownerName,
-            balance: account.balance,
-            createdAt: account.createdAt
-        })
-    }catch(error){
-        res.status(400).json({
-            error: error.message
-        })
-    }
-})
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+server.use(express.json());
+
+server.post("/accounts", (request, response) => {
+  try {
+    const { ownerName } = request.body;
+    const newAccount = new Account(ownerName);
+    allAccounts.push(newAccount);
+
+    response.status(201).json({
+      id: newAccount.id,
+      ownerName: newAccount.ownerName,
+      balance: newAccount.balance,
+      createdAt: newAccount.createdAt,
+    });
+  } catch (error) {
+    response.status(400).json({ error: error.message });
+  }
 });
 
-app.listen(port, () => {
+server.get("/accounts/:id", (req ,res) => {
+    const {id} = req.params;
+    const foundAccount = allAccounts.find((account) => account.id === id);
+    if (!foundAccount){
+        return res.status(404).json({
+            error: "account not found"
+        });
+    };
+    res.json({
+        id: foundAccount.id,
+        ownerName: foundAccount.ownerName,
+        balance: foundAccount.balance,
+        createdAt: foundAccount.createdAt
+    });
+});
+server.get("/health", (request, response) => {
+  response.json({ status: "ok" });
+});
+
+server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
