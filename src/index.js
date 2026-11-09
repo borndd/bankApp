@@ -11,10 +11,12 @@ function findAccountbyId(id) {
 }
 
 server.use(express.json());
+// в терминале пишет что ты делаешь
 server.use((req, res, next) =>{
     console.log("Server:", new Date().toISOString(), req.method, req.url)
     next();
 })
+
 // читает описание
 server.post("/accounts", (request, response) => {
   try {
@@ -113,6 +115,15 @@ server.get("/accounts/:id/transactions", (req, res) => {
 });
 // историю операций
 
+server.use((req, res)=> {
+    res.status(404).json({error: "Address not found"});
+});
+// отвечает если адрес не верный
+
+server.use((err, req, res, next)=>{
+    res.status(400).json({err: err.message});
+});
 server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
 });
+
