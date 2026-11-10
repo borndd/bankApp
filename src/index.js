@@ -1,8 +1,6 @@
 import express from "express";
-import { Account } from "./models/Account.js";
-import { Transaction } from "./models/Transaction.js";
 import { ValidationError } from "./errors/ValidationError.js";
-import { allAccounts, findAccountbyId } from "./data/accountStorage.js";
+import { createAccount, findAccountById, getAllAccounts, deposit, withdraw, transactionHistory } from "./controllers/accountController.js";
 const server = express();
 const port = 3000;
 
@@ -14,90 +12,21 @@ server.use((req, res, next) =>{
     next();
 })
 // читает описание
-server.post("/accounts", (req, res) => {
-    const { ownerName } = req.body;
-    const newAccount = new Account(ownerName);
-    allAccounts.push(newAccount);
-
-    res.status(201).json({
-      id: newAccount.id,
-      ownerName: newAccount.ownerName,
-      balance: newAccount.balance,
-      createdAt: newAccount.createdAt,
-    });
-});
+server.post("/accounts", createAccount);
 // создает новый счет
-server.get("/accounts/:id", (req, res) => {
-  const foundAccount = findAccountbyId(req.params.id);
-  if (!foundAccount) {
-    return res.status(404).json({
-      error: "account not found",
-    });
-  }
-  res.json({
-    id: foundAccount.id,
-    ownerName: foundAccount.ownerName,
-    balance: foundAccount.balance,
-    createdAt: foundAccount.createdAt,
-  });
-});
+server.get("/accounts/:id", findAccountById);
 // ищет аккаунт по айди
-server.get("/accounts", (req, res) => {
-  const listAccounts = allAccounts.map((account) => ({
-    id: account.id,
-    ownerName: account.ownerName,
-    balance: account.balance,
-    createdAt: account.createdAt,
-  }));
-  res.json(listAccounts);
-});
+server.get("/accounts", getAllAccounts);
 // ищет все аккаунты
-server.post("/accounts/:id/deposit", (req, res) => {
-    const foundAccount = findAccountbyId(req.params.id);
-    if (!foundAccount) {
-      return res.status(404).json({
-        message: "Account not found",
-      });
-    }
-    const { amount } = req.body;
-    foundAccount.deposit(amount);
-    res.status(200).json({
-      id: foundAccount.id,
-      ownerName: foundAccount.ownerName,
-      balance: foundAccount.balance,
-    });
-});
+server.post("/accounts/:id/deposit", deposit);
 // для депозит
-server.post("/accounts/:id/withdraw", (req, res) => {
-    const foundAccount = findAccountbyId(req.params.id);
-    if (!foundAccount) {
-      return res.status(404).json({
-        error: "Account not found",
-      });
-    }
-    const { amount } = req.body;
-    foundAccount.withdraw(amount);
-    res.status(200).json({
-      id: foundAccount.id,
-      ownerName: foundAccount.ownerName,
-      balance: foundAccount.balance,
-    });
-    
-});
+server.post("/accounts/:id/withdraw", withdraw);
 // для снятие
 server.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 // проверка сервера
-server.get("/accounts/:id/transactions", (req, res) => {
-  const foundAccount = findAccountbyId(req.params.id);
-  if (!foundAccount) {
-    return res.status(404).json({
-      error: "Account not found",
-    });
-  }
-  res.status(200).json(foundAccount.transactions);
-});
+server.get("/accounts/:id/transactions", transactionHistory);
 // историю операций
 
 server.use((req, res)=> {
