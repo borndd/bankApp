@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { Transaction } from "./Transaction.js";
+import { ValidationError } from "../errors/ValidationError.js";
 
 export class Account {
   #balance = 0; // 
@@ -7,7 +8,7 @@ export class Account {
 
   constructor(ownerName) {
     if (typeof ownerName !== "string" || !ownerName.trim()) {
-      throw new Error("You need to enter your name");
+      throw new ValidationError("You need to enter your name");
     }
     this.id = randomUUID();
     this.ownerName = ownerName;
@@ -16,7 +17,7 @@ export class Account {
 
   deposit(amount) {
     if (!Number.isSafeInteger(amount) || amount <= 0) {
-      throw new Error("Amount must be a positive whole number (in tiyin)");
+      throw new ValidationError("Amount must be a positive whole number (in tiyin)");
     }
     const newTransaction = new Transaction("deposit", amount);
     this.#balance += amount;
@@ -25,10 +26,10 @@ export class Account {
 
   withdraw(amount) {
     if (!Number.isSafeInteger(amount) || amount <= 0) {
-      throw new Error("Amount must be a positive whole number (in tiyin)");
+      throw new ValidationError("Amount must be a positive whole number (in tiyin)");
     }
     if (amount > this.#balance) {
-      throw new Error("You don't have enough balance");
+      throw new ValidationError("You don't have enough balance");
     }
     const newTransaction = new Transaction("withdraw", amount);
     this.#balance -= amount;

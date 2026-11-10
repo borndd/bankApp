@@ -1,14 +1,15 @@
 import { randomUUID } from "node:crypto";
+import { ValidationError } from "../errors/ValidationError.js";
 
 const ALLOWED_TYPES = ["deposit", "withdraw"];
 
 export class Transaction {
   constructor(type, amount) {
     if (!ALLOWED_TYPES.includes(type)) {
-      throw new Error("Not allowed operation type");
+      throw new ValidationError("Not allowed operation type");
     }
     if (!Number.isSafeInteger(amount) || amount <= 0) {
-      throw new Error("Amount must be a positive whole number (in tiyin)");
+      throw new ValidationError("Amount must be a positive whole number (in tiyin)");
     }
     this.id = randomUUID();
     this.type = type;

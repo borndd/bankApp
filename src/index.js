@@ -1,14 +1,11 @@
-import express, { response } from "express";
+import express from "express";
 import { Account } from "./models/Account.js";
 import { Transaction } from "./models/Transaction.js";
-
+import { ValidationError } from "./errors/ValidationError.js";
+import { allAccounts, findAccountbyId } from "./data/accountStorage.js";
 const server = express();
 const port = 3000;
-const allAccounts = [];
 
-function findAccountbyId(id) {
-  return allAccounts.find((account) => account.id === id);
-}
 
 server.use(express.json());
 // в терминале пишет что ты делаешь
@@ -16,23 +13,18 @@ server.use((req, res, next) =>{
     console.log("Server:", new Date().toISOString(), req.method, req.url)
     next();
 })
-
 // читает описание
-server.post("/accounts", (request, response) => {
-  try {
-    const { ownerName } = request.body;
+server.post("/accounts", (req, res) => {
+    const { ownerName } = req.body;
     const newAccount = new Account(ownerName);
     allAccounts.push(newAccount);
 
-    response.status(201).json({
+    res.status(201).json({
       id: newAccount.id,
       ownerName: newAccount.ownerName,
       balance: newAccount.balance,
       createdAt: newAccount.createdAt,
     });
-  } catch (error) {
-    response.status(400).json({ error: error.message });
-  }
 });
 // создает новый счет
 server.get("/accounts/:id", (req, res) => {
@@ -61,7 +53,6 @@ server.get("/accounts", (req, res) => {
 });
 // ищет все аккаунты
 server.post("/accounts/:id/deposit", (req, res) => {
-  try {
     const foundAccount = findAccountbyId(req.params.id);
     if (!foundAccount) {
       return res.status(404).json({
@@ -75,13 +66,9 @@ server.post("/accounts/:id/deposit", (req, res) => {
       ownerName: foundAccount.ownerName,
       balance: foundAccount.balance,
     });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
 });
 // для депозит
 server.post("/accounts/:id/withdraw", (req, res) => {
-  try {
     const foundAccount = findAccountbyId(req.params.id);
     if (!foundAccount) {
       return res.status(404).json({
@@ -95,13 +82,11 @@ server.post("/accounts/:id/withdraw", (req, res) => {
       ownerName: foundAccount.ownerName,
       balance: foundAccount.balance,
     });
-  } catch (error) {
-    res.status(400).json({ error: error.message });
-  }
+    
 });
 // для снятие
-server.get("/health", (request, response) => {
-  response.json({ status: "ok" });
+server.get("/health", (req, res) => {
+  res.json({ status: "ok" });
 });
 // проверка сервера
 server.get("/accounts/:id/transactions", (req, res) => {
@@ -121,7 +106,11 @@ server.use((req, res)=> {
 // отвечает если адрес не верный
 
 server.use((err, req, res, next)=>{
-    res.status(400).json({err: err.message});
+    if(err instanceof ValidationError){
+        return res.status(400).json({error: err.message});
+    }
+    console.error(err);
+    res.status(500).json({error: "Server Error"})
 });
 server.listen(port, () => {
   console.log(`Server is running on port: ${port}`);
