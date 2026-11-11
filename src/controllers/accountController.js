@@ -1,6 +1,10 @@
 import mongoose from "mongoose";
 import { AccountModel } from "../models/accountModel.js";
-import { depositToAccount, withdrawFromAccount, getTransactionsOfAccount } from "../services/accountService.js";
+import {
+  depositToAccount,
+  withdrawFromAccount,
+  getTransactionsOfAccount,
+} from "../services/accountService.js";
 
 export async function createAccount(req, res) {
   const { ownerName } = req.body;
@@ -17,8 +21,8 @@ export async function getAccountById(req, res) {
     });
   }
   const foundAccount = await AccountModel.findById(id);
-  if(!foundAccount){
-   return res.status(404).json({error: "Account not found"})
+  if (!foundAccount) {
+    return res.status(404).json({ error: "Account not found" });
   }
   res.json(toAccountResponse(foundAccount));
 }

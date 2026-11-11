@@ -1,5 +1,12 @@
-import express  from "express";
-import { createAccount, getAccountById, getAllAccounts, deposit, withdraw, transactionHistory } from "../controllers/accountController.js";
+import express from "express";
+import {
+  createAccount,
+  getAccountById,
+  getAllAccounts,
+  deposit,
+  withdraw,
+  transactionHistory,
+} from "../controllers/accountController.js";
 
 export const accountRouter = express.Router();
 
@@ -14,7 +21,3 @@ accountRouter.post("/:id/deposit", deposit);
 accountRouter.post("/:id/withdraw", withdraw);
 // для снятие
 accountRouter.get("/:id/transactions", transactionHistory);
-
-
-
-
