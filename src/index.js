@@ -1,8 +1,10 @@
 import express from "express";
 import { ValidationError } from "./errors/ValidationError.js";
+import { AuthError } from "./errors/AuthError.js";
 import { accountRouter } from "./routes/accountRoutes.js";
 import { connectDatabase } from "./config/database.js";
 import { authRouter } from "./routes/authRoutes.js";
+import { requireAuth } from "./middlewares/authMiddleware.js";
 const server = express();
 const port = 3000;
 
@@ -13,7 +15,7 @@ server.use((req, res, next) =>{
     console.log("Server:", new Date().toISOString(), req.method, req.url)
     next();
 })
-server.use("/accounts", accountRouter);
+server.use("/accounts", requireAuth, accountRouter);
 server.use("/auth", authRouter);
 // читает описание  
 server.get("/health", (req, res) => {
@@ -32,6 +34,9 @@ server.use((err, req, res, next)=>{
     }
     if(err.name === "ValidationError"){
         return res.status(400).json({error: Object.values(err.errors)[0].message});
+    }
+    if(err instanceof AuthError){
+        return res.status(401).json({error: err.message})
     }
     console.error(err);
     res.status(500).json({error: "Server Error"})

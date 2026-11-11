@@ -8,6 +8,7 @@ const accountSchema = new mongoose.Schema(
       trim: true,
     },
     balance: { type: Number, default: 0 },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true }
   },
   { timestamps: true },
 );

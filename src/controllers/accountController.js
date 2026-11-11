@@ -7,9 +7,10 @@ import {
 } from "../services/accountService.js";
 
 export async function createAccount(req, res) {
-  const { ownerName } = req.body;
+  const { ownerName } = req.body ?? {};
+  const userId = req.user.id;
 
-  const newAccount = await AccountModel.create({ ownerName });
+  const newAccount = await AccountModel.create({ ownerName, userId });
   res.status(201).json(toAccountResponse(newAccount));
 }
 
@@ -40,11 +41,7 @@ export async function deposit(req, res) {
   if (!updatedAccount) {
     return res.status(404).json({ error: "Account not found" });
   }
-  res.status(200).json({
-    id: updatedAccount.id,
-    ownerName: updatedAccount.ownerName,
-    balance: updatedAccount.balance,
-  });
+ res.json(toAccountResponse(updatedAccount));
 }
 
 export async function withdraw(req, res) {
@@ -77,7 +74,7 @@ function toTransactionResponse(transaction) {
     amount: transaction.amount,
     createdAt: transaction.createdAt,
   };
-}
+}     
 
 function toAccountResponse(account) {
   return {
@@ -85,5 +82,6 @@ function toAccountResponse(account) {
     ownerName: account.ownerName,
     balance: account.balance,
     createdAt: account.createdAt,
+    user: account.userId
   };
 }
