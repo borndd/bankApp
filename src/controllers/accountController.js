@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import { AccountModel } from "../models/accountModel.js";
-import { findAccountbyId } from "../data/accountStorage.js";
+import { depositToAccount, withdrawFromAccount, getTransactionsOfAccount } from "../services/accountService.js";
 
 export async function createAccount(req, res) {
   const { ownerName } = req.body;
@@ -28,45 +28,51 @@ export async function getAllAccounts(req, res) {
   res.json(listAccounts.map(toAccountResponse));
 }
 
-export function deposit(req, res) {
-  const foundAccount = findAccountbyId(req.params.id);
-  if (!foundAccount) {
-    return res.status(404).json({
-      message: "Account not found",
-    });
-  }
+export async function deposit(req, res) {
+  const { id } = req.params;
   const { amount } = req.body;
-  foundAccount.deposit(amount);
+
+  const updatedAccount = await depositToAccount(id, amount);
+  if (!updatedAccount) {
+    return res.status(404).json({ error: "Account not found" });
+  }
   res.status(200).json({
-    id: foundAccount.id,
-    ownerName: foundAccount.ownerName,
-    balance: foundAccount.balance,
+    id: updatedAccount.id,
+    ownerName: updatedAccount.ownerName,
+    balance: updatedAccount.balance,
   });
 }
 
-export function withdraw(req, res) {
-  const foundAccount = findAccountbyId(req.params.id);
-  if (!foundAccount) {
-    return res.status(404).json({
-      error: "Account not found",
-    });
-  }
+export async function withdraw(req, res) {
+  const { id } = req.params;
   const { amount } = req.body;
-  foundAccount.withdraw(amount);
+
+  const updatedAccount = await withdrawFromAccount(id, amount);
+  if (!updatedAccount) {
+    return res.status(404).json({ error: "Account not found" });
+  }
   res.status(200).json({
-    id: foundAccount.id,
-    ownerName: foundAccount.ownerName,
-    balance: foundAccount.balance,
+    id: updatedAccount.id,
+    ownerName: updatedAccount.ownerName,
+    balance: updatedAccount.balance,
   });
 }
-export function transactionHistory(req, res) {
-  const foundAccount = findAccountbyId(req.params.id);
-  if (!foundAccount) {
-    return res.status(404).json({
-      error: "Account not found",
-    });
+
+export async function transactionHistory(req, res) {
+  const transactions = await getTransactionsOfAccount(req.params.id);
+  if (!transactions) {
+    return res.status(404).json({ error: "Account not found" });
   }
-  res.status(200).json(foundAccount.transactions);
+  res.status(200).json(transactions.map(toTransactionResponse));
+}
+
+function toTransactionResponse(transaction) {
+  return {
+    id: transaction.id,
+    type: transaction.type,
+    amount: transaction.amount,
+    createdAt: transaction.createdAt,
+  };
 }
 
 function toAccountResponse(account) {
