@@ -16,12 +16,15 @@ export async function createAccount(req, res) {
 
 export async function getAccountById(req, res) {
   const { id } = req.params;
+  const userId = req.user.id;
   if (!mongoose.isValidObjectId(id)) {
     return res.status(404).json({
       error: "account not found",
     });
   }
-  const foundAccount = await AccountModel.findById(id);
+  const foundAccount = await AccountModel.findOne(
+    {_id: id,
+    userId: userId}) 
   if (!foundAccount) {
     return res.status(404).json({ error: "Account not found" });
   }
@@ -29,15 +32,19 @@ export async function getAccountById(req, res) {
 }
 
 export async function getAllAccounts(req, res) {
-  const listAccounts = await AccountModel.find();
+  const userId = req.user.id
+  const listAccounts = await AccountModel.find(
+    {userId: userId}
+  )
   res.json(listAccounts.map(toAccountResponse));
 }
 
 export async function deposit(req, res) {
   const { id } = req.params;
   const { amount } = req.body;
+  const userId = req.user.id
 
-  const updatedAccount = await depositToAccount(id, amount);
+  const updatedAccount = await depositToAccount(id, amount, userId);
   if (!updatedAccount) {
     return res.status(404).json({ error: "Account not found" });
   }
@@ -73,6 +80,7 @@ function toTransactionResponse(transaction) {
     type: transaction.type,
     amount: transaction.amount,
     createdAt: transaction.createdAt,
+    transferId: transaction.transferId
   };
 }     
 

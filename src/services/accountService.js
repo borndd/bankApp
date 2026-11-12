@@ -3,7 +3,7 @@ import { ValidationError } from "../errors/ValidationError.js";
 import { AccountModel } from "../models/accountModel.js";
 import { TransactionModel } from "../models/transactionModel.js";
 
-export async function depositToAccount(id, amount) {
+export async function depositToAccount(id, amount, userId) {
   if (!Number.isSafeInteger(amount) || amount <= 0) {
     throw new ValidationError("Amount must be a positive whole number");
   }
@@ -11,8 +11,8 @@ export async function depositToAccount(id, amount) {
     return null;
   }
 
-  const updated = await AccountModel.findByIdAndUpdate(
-    id,
+  const updated = await AccountModel.findOneAndUpdate(
+    {_id: id, userId: userId},
     { $inc: { balance: amount } },
     { returnDocument: "after" },
   );
@@ -35,7 +35,7 @@ export async function withdrawFromAccount(id, amount) {
   const updated = await AccountModel.findOneAndUpdate(
     { _id: id, balance: { $gte: amount } },
     { $inc: { balance: -amount } },
-    { returnDocument: "after" },
+    { returnDocument: "after" },   
   );
   if (updated) {
     await TransactionModel.create({ accountId: id, type: "withdraw", amount });
@@ -57,4 +57,8 @@ export async function getTransactionsOfAccount(id) {
     return null;
   }
   return await TransactionModel.find({ accountId: id }).sort({ createdAt: -1 });
+}
+
+export async function transferBetweenAccounts(fromAccounId, toAccountId, amound, userId){
+  
 }
